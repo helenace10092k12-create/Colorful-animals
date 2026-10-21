@@ -3,132 +3,130 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nông Trại Vui Vẻ - HayDay Web Edition</title>
+    <title>Nông Trại Vui Vẻ 2.5D - Hay Day Web Edition</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body {
-            background-color: #2e7d32; color: #fff;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1b4332; color: #fff;
             display: flex; justify-content: center; align-items: center;
-            min-height: 100vh; flex-direction: column; padding: 10px;
+            min-height: 100vh; overflow: hidden;
         }
-        #game-container {
-            width: 800px; background: #81c784; border: 6px solid #1b5e20;
-            border-radius: 15px; padding: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-            display: flex; flex-direction: column; gap: 12px;
+        #game-wrapper {
+            position: relative; width: 900px; height: 620px;
+            background: linear-gradient(135deg, #2d6a4f 0%, #1b4332 100%);
+            border: 8px solid #52b788; border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+            display: flex; flex-direction: column; overflow: hidden;
         }
-        /* THANH ĐẦU GAME */
-        .header {
-            background: #388e3c; padding: 10px 15px; border-radius: 10px;
-            display: flex; justify-content: space-between; align-items: center; font-weight: bold;
+        /* HUD ĐẦU GAME GỖ 3D */
+        #top-hud {
+            height: 55px; background: rgba(45, 20, 10, 0.85);
+            border-bottom: 4px solid #b76e79; padding: 0 20px;
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 10; backdrop-filter: blur(5px);
         }
-        .stats { display: flex; gap: 15px; font-size: 14px; }
-        .stat-item { background: rgba(0,0,0,0.2); padding: 5px 10px; border-radius: 6px; }
+        .farm-title { font-weight: 900; color: #ffeb3b; font-size: 18px; text-shadow: 2px 2px #000; letter-spacing: 1px; }
+        .hud-stats { display: flex; gap: 15px; }
+        .badge {
+            background: #522e0a; border: 2px solid #ffb74d; border-radius: 12px;
+            padding: 4px 12px; font-size: 13px; font-weight: bold; color: #fff;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.5); display: flex; align-items: center; gap: 5px;
+        }
 
-        /* KHU VỰC CHÍNH */
-        .main-area { display: flex; gap: 15px; }
+        #main-container { position: relative; width: 100%; height: 565px; display: flex; }
         
-        /* CỘT BÊN TRÁI: ĐẤT TRỒNG & CHUỒNG VẬT NUÔI */
-        .farm-grid {
-            flex: 2; background: #a5d6a7; padding: 15px; border-radius: 10px;
-            display: flex; flex-direction: column; gap: 15px;
+        /* CANVAS BẢN ĐỒ 2.5D ISOMETRIC */
+        canvas { width: 620px; height: 565px; display: block; image-rendering: pixelated; }
+
+        /* BẢNG ĐIỀU KHIỂN CỬA HÀNG & KHO BÊN PHẢI */
+        #sidebar {
+            width: 280px; height: 100%; background: rgba(30, 15, 5, 0.9);
+            border-left: 4px solid #8d5b4c; padding: 15px; display: flex;
+            flex-direction: column; gap: 15px; z-index: 5;
         }
-        .section-title { color: #1b5e20; font-size: 14px; font-weight: bold; margin-bottom: 5px; }
+        .panel-box {
+            background: #3a1e08; border: 3px solid #ffb74d; border-radius: 12px;
+            padding: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+        }
+        .panel-header { font-size: 14px; font-weight: bold; color: #ffd54f; margin-bottom: 8px; border-bottom: 2px dashed #8d5b4c; padding-bottom: 4px; }
+        .inv-item { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px; color: #e0e0e0; }
         
-        .plots-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-        .plot-card {
-            background: #795548; height: 90px; border-radius: 8px; border: 3px solid #4e342e;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            cursor: pointer; transition: 0.2s; position: relative;
+        .action-btn {
+            background: linear-gradient(180deg, #ffb74d 0%, #f57c00 100%);
+            border: 2px solid #fff; border-radius: 10px; color: #fff; font-weight: bold;
+            font-size: 12px; padding: 10px; text-shadow: 1px 1px 2px #000; cursor: pointer;
+            box-shadow: 0 4px 0 #b26a00, 0 5px 10px rgba(0,0,0,0.3); transition: 0.1s;
+            margin-top: 6px; width: 100%; text-align: center;
         }
-        .plot-card:hover { transform: scale(1.03); }
-
-        .coop-container {
-            background: #d7ccc8; border: 3px solid #5d4037; border-radius: 8px; padding: 10px;
-            display: flex; justify-content: space-between; align-items: center; color: #3e2723;
-        }
-
-        /* CỘT BÊN PHẢI: TÚI ĐỒ & CHỢ BÁN HÀNG */
-        .sidebar { flex: 1; display: flex; flex-direction: column; gap: 10px; }
-        .panel { background: #388e3c; padding: 10px; border-radius: 8px; font-size: 12px; }
-        .panel-title { font-weight: bold; margin-bottom: 8px; color: #ffeb3b; }
-
-        .shop-btn {
-            background: #fbc02d; color: #333; border: none; padding: 8px; margin-top: 5px;
-            width: 100%; border-radius: 5px; font-weight: bold; cursor: pointer; transition: 0.2s;
-        }
-        .shop-btn:hover { background: #fdd835; }
+        .action-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #b26a00; }
+        .btn-sell { background: linear-gradient(180deg, #81c784 0%, #388e3c 100%); box-shadow: 0 4px 0 #1b5e20; }
+        .btn-sell:active { box-shadow: 0 1px 0 #1b5e20; }
     </style>
 </head>
 <body>
 
-<div id="game-container">
-    <!-- THANH THÔNG TIN VÀNG & KHO HÀNG -->
-    <div class="header">
-        <div>🌾 NÔNG TRẠI VUI VẺ</div>
-        <div class="stats">
-            <div class="stat-item">🪙 Vàng: <span id="gold-txt">100</span></div>
-            <div class="stat-item">🌱 Hạt lúa: <span id="seeds-txt">5</span></div>
+<div id="game-wrapper">
+    <div id="top-hud">
+        <div class="farm-title">🌾 HAY DAY 2.5D ISOMETRIC</div>
+        <div class="hud-stats">
+            <div class="badge">🪙 <span id="gold-txt">100</span> Vàng</div>
+            <div class="badge">🌱 <span id="seeds-txt">5</span> Hạt Lúa</div>
         </div>
     </div>
 
-    <div class="main-area">
-        <!-- KHU VỰC TRỒNG TRỌT & CHĂN NUÔI -->
-        <div class="farm-grid">
-            <div>
-                <div class="section-title">🌱 CÁC Ô ĐẤT TRỒNG LÚA</div>
-                <div class="plots-container">
-                    <div class="plot-card" onclick="interactPlot(0)" id="plot-0">🟫 Đất trống</div>
-                    <div class="plot-card" onclick="interactPlot(1)" id="plot-1">🟫 Đất trống</div>
-                    <div class="plot-card" onclick="interactPlot(2)" id="plot-2">🟫 Đất trống</div>
+    <div id="main-container">
+        <canvas id="farmCanvas" width="620" height="565"></canvas>
+
+        <div id="sidebar">
+            <div class="panel-box">
+                <div class="panel-header">📦 KHO NÔNG SẢN 2.5D</div>
+                <div class="inv-item"><span>🌾 Lúa Mì:</span> <b id="wheat-txt" style="color:#ffeb3b">0</b></div>
+                <div class="inv-item"><span>🥚 Trứng Gà:</span> <b id="egg-txt" style="color:#fff">0</b></div>
+            </div>
+
+            <div class="panel-box">
+                <div class="panel-header">🏪 CỬA HÀNG NÔNG TRẠI</div>
+                <button class="action-btn" onclick="buySeed()">Mua 1 Hạt Lúa (10 Vàng)</button>
+                <button class="action-btn btn-sell" onclick="sellGoods('wheat')">Bán 1 Lúa Mì (+15 Vàng)</button>
+                <button class="action-btn btn-sell" onclick="sellGoods('egg')">Bán 1 Trứng Gà (+30 Vàng)</button>
+            </div>
+
+            <div class="panel-box" style="margin-top:auto; background: rgba(0,0,0,0.3); border-color:#8d5b4c;">
+                <div style="font-size:11px; color:#b0bec5; line-height:1.4;">
+                    💡 <b>HƯỚNG DẪN 2.5D:</b><br>
+                    • Nhấp chuột vào các ô đất nâu 2.5D để gieo hạt / thu hoạch.<br>
+                    • Nhấp vào Chuồng Gà bên phải để cho gà ăn lúa & lấy trứng!
                 </div>
-            </div>
-
-            <div>
-                <div class="section-title">🐔 CHUỒNG GÀ CHĂN NUÔI</div>
-                <div class="coop-container">
-                    <div>
-                        <div style="font-weight:bold; font-size:14px;">🐔 Gà Mái ChiChi</div>
-                        <div id="chicken-status" style="font-size:11px; margin-top:3px;">Trạng thái: Đang đói bụng 🌾</div>
-                    </div>
-                    <button class="shop-btn" style="width: auto; padding: 6px 12px;" onclick="interactChicken()">Cho Ăn / Thu Hoạch</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- BẢNG TÚI ĐỒ & CỬA HÀNG BÁN NÔNG SẢN -->
-        <div class="sidebar">
-            <div class="panel">
-                <div class="panel-title">📦 KHO NÔNG SẢN</div>
-                <div>🌾 Lúa mì: <b id="wheat-txt">0</b></div>
-                <div>🥚 Trứng gà: <b id="egg-txt">0</b></div>
-            </div>
-
-            <div class="panel">
-                <div class="panel-title">🏪 CỬA HÀNG & MUA BÁN</div>
-                <button class="shop-btn" onclick="buySeed()">Mua Hạt Lúa (10 Vàng)</button>
-                <button class="shop-btn" onclick="sellGoods('wheat')" style="background:#81c784; color:#fff;">Bán 1 Lúa (15 Vàng)</button>
-                <button class="shop-btn" onclick="sellGoods('egg')" style="background:#ffb74d; color:#fff;">Bán 1 Trứng (30 Vàng)</button>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-// BIẾN QUẢN LÝ DỮ LIỆU GAME
+const canvas = document.getElementById('farmCanvas');
+const ctx = canvas.getContext('2d');
+
 let gold = 100;
 let seeds = 5;
 let inventory = { wheat: 0, egg: 0 };
 
-// Dữ liệu 3 ô đất
+// Chuyển đổi tọa độ Isometric 2.5D
+function toIso(x, y) {
+    return {
+        isoX: (x - y) * 48 + 260,
+        isoY: (x + y) * 24 + 120
+    };
+}
+
+// Khởi tạo 4 ô đất 2.5D (2x2 Grid)
 let plots = [
-    { state: 'EMPTY', timer: null, progress: 0 },
-    { state: 'EMPTY', timer: null, progress: 0 },
-    { state: 'EMPTY', timer: null, progress: 0 }
+    { gridX: 0, gridY: 0, state: 'EMPTY', timer: null, progress: 0 },
+    { gridX: 1, gridY: 0, state: 'EMPTY', timer: null, progress: 0 },
+    { gridX: 0, gridY: 1, state: 'EMPTY', timer: null, progress: 0 },
+    { gridX: 1, gridY: 1, state: 'EMPTY', timer: null, progress: 0 }
 ];
 
-// Dữ liệu Chuồng gà
-let chicken = { state: 'HUNGRY', timer: null };
+let chickenCoop = { state: 'HUNGRY', timer: null, progress: 0 };
 
 function updateUI() {
     document.getElementById('gold-txt').innerText = gold;
@@ -137,93 +135,206 @@ function updateUI() {
     document.getElementById('egg-txt').innerText = inventory.egg;
 }
 
-// XỬ LÝ Ô ĐẤT TRỒNG CÂY
-function interactPlot(index) {
-    let p = plots[index];
-    let el = document.getElementById(`plot-${index}`);
+// Vẽ khối Kim Cương Isometric 2.5D cho ô đất
+function drawIsoTile(x, y, tileColor, borderColor, height = 12) {
+    let pt = toIso(x, y);
 
-    if (p.state === 'EMPTY') {
-        if (seeds > 0) {
-            seeds--;
-            p.state = 'GROWING';
-            p.progress = 5; // Cần 5 giây để chín
-            el.innerText = `🌱 Đang lớn (${p.progress}s)`;
-            el.style.background = "#5d4037";
+    // Mặt hông trái (độ sâu 3D)
+    ctx.fillStyle = borderColor;
+    ctx.beginPath();
+    ctx.moveTo(pt.isoX - 48, pt.isoY);
+    ctx.lineTo(pt.isoX, pt.isoY + 24);
+    ctx.lineTo(pt.isoX, pt.isoY + 24 + height);
+    ctx.lineTo(pt.isoX - 48, pt.isoY + height);
+    ctx.closePath();
+    ctx.fill();
 
-            p.timer = setInterval(() => {
-                p.progress--;
-                if (p.progress > 0) {
-                    el.innerText = `🌱 Đang lớn (${p.progress}s)`;
-                } else {
-                    clearInterval(p.timer);
-                    p.state = 'READY';
-                    el.innerText = "🌾 Thu Hoạch Lúa!";
-                    el.style.background = "#fbc02d";
-                }
-            }, 1000);
-        } else {
-            alert("Bạn hết Hạt Giống rồi! Vào Cửa hàng mua thêm nha.");
-        }
-    } else if (p.state === 'READY') {
-        p.state = 'EMPTY';
-        inventory.wheat++;
-        el.innerText = "🟫 Đất trống";
-        el.style.background = "#795548";
-    }
-    updateUI();
+    // Mặt hông phải (độ sâu 3D)
+    ctx.fillStyle = adjustColor(borderColor, -30);
+    ctx.beginPath();
+    ctx.moveTo(pt.isoX, pt.isoY + 24);
+    ctx.lineTo(pt.isoX + 48, pt.isoY);
+    ctx.lineTo(pt.isoX + 48, pt.isoY + height);
+    ctx.lineTo(pt.isoX, pt.isoY + 24 + height);
+    ctx.closePath();
+    ctx.fill();
+
+    // Mặt trên đỉnh 2.5D
+    ctx.fillStyle = tileColor;
+    ctx.beginPath();
+    ctx.moveTo(pt.isoX, pt.isoY - 24);
+    ctx.lineTo(pt.isoX + 48, pt.isoY);
+    ctx.lineTo(pt.isoX, pt.isoY + 24);
+    ctx.lineTo(pt.isoX - 48, pt.isoY);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.strokeStyle = '#2d1810';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
 }
 
-// XỬ LÝ CHĂN NUÔI GÀ
-function interactChicken() {
-    let statusEl = document.getElementById('chicken-status');
-
-    if (chicken.state === 'HUNGRY') {
-        if (inventory.wheat > 0) {
-            inventory.wheat--;
-            chicken.state = 'EATING';
-            statusEl.innerText = "Trạng thái: Gà đang ăn lúa & đẻ trứng (7s)... ⏳";
-
-            setTimeout(() => {
-                chicken.state = 'READY';
-                statusEl.innerText = "Trạng thái: 🪺 Đã đẻ trứng! Bấm để lấy trứng!";
-            }, 7000);
-        } else {
-            alert("Bạn không có Lúa mì để cho gà ăn! Hãy trồng lúa trước nha.");
-        }
-    } else if (chicken.state === 'READY') {
-        chicken.state = 'HUNGRY';
-        inventory.egg++;
-        statusEl.innerText = "Trạng thái: Đang đói bụng 🌾";
-        alert("Đã thu hoạch được 1 Quả Trứng Gà! 🥚");
-    }
-    updateUI();
+function adjustColor(hex, amount) {
+    return hex; // Giữ màu chuẩn
 }
 
-// CỬA HÀNG MUA BÁN
-function buySeed() {
-    if (gold >= 10) {
-        gold -= 10;
-        seeds++;
+function drawFarm() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // 1. Vẽ nền cỏ Isometric xung quanh
+    for (let x = -1; x <= 3; x++) {
+        for (let y = -1; y <= 3; y++) {
+            if (x < 0 || x > 1 || y < 0 || y > 1) {
+                drawIsoTile(x, y, '#52b788', '#2d6a4f', 6);
+            }
+        }
+    }
+
+    // 2. Vẽ 4 ô đất nông trại 2.5D
+    plots.forEach((p, idx) => {
+        let pt = toIso(p.gridX, p.gridY);
+
+        if (p.state === 'EMPTY') {
+            drawIsoTile(p.gridX, p.gridY, '#795548', '#4e342e', 14);
+            ctx.fillStyle = 'rgba(255,255,255,0.7)';
+            ctx.font = 'bold 11px Segoe UI';
+            ctx.fillText("🟫 Đất Trống", pt.isoX - 28, pt.isoY + 4);
+        } else if (p.state === 'GROWING') {
+            drawIsoTile(p.gridX, p.gridY, '#5d4037', '#3e2723', 14);
+            
+            // Vẽ mầm lúa 2.5D
+            ctx.fillStyle = '#76ff03';
+            ctx.fillRect(pt.isoX - 4, pt.isoY - 15, 8, 15);
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 11px Segoe UI';
+            ctx.fillText(`🌱 ${p.progress}s`, pt.isoX - 12, pt.isoY + 4);
+        } else if (p.state === 'READY') {
+            drawIsoTile(p.gridX, p.gridY, '#fbc02d', '#f57f17', 14);
+            
+            // Vẽ bụi lúa vàng rực rỡ 2.5D
+            ctx.fillStyle = '#ffeb3b';
+            ctx.beginPath();
+            ctx.arc(pt.isoX, pt.isoY - 15, 16, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#e65100';
+            ctx.font = 'bold 11px Segoe UI';
+            ctx.fillText("🌾 Thu Hoạch!", pt.isoX - 32, pt.isoY + 4);
+        }
+    });
+
+    // 3. Vẽ Chuồng Gà 2.5D Isometric (nằm ở vị trí x=2, y=0)
+    let coopPt = toIso(2.2, 0.5);
+    ctx.fillStyle = '#d7ccc8';
+    ctx.fillRect(coopPt.isoX - 40, coopPt.isoY - 30, 80, 50);
+    ctx.strokeStyle = '#5d4037'; ctx.lineWidth = 3;
+    ctx.strokeRect(coopPt.isoX - 40, coopPt.isoY - 30, 80, 50);
+
+    // Mái nhà chuồng gà 3D
+    ctx.fillStyle = '#d32f2f';
+    ctx.beginPath();
+    ctx.moveTo(coopPt.isoX - 50, coopPt.isoY - 30);
+    ctx.lineTo(coopPt.isoX, coopPt.isoY - 60);
+    ctx.lineTo(coopPt.isoX + 50, coopPt.isoY - 30);
+    ctx.closePath();
+    ctx.fill();
+
+    // Vẽ con gà 2.5D
+    ctx.font = '26px Segoe UI';
+    ctx.fillText("🐔", coopPt.isoX - 15, coopPt.isoY + 5);
+
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 11px Segoe UI';
+    if (chickenCoop.state === 'HUNGRY') {
+        ctx.fillText("🐔 Bấm Cho Ăn 🌾", coopPt.isoX - 42, coopPt.isoY + 35);
+    } else if (chickenCoop.state === 'EATING') {
+        ctx.fillText(`⏳ Đang đẻ... (${chickenCoop.progress}s)`, coopPt.isoX - 45, coopPt.isoY + 35);
+    } else if (chickenCoop.state === 'READY') {
+        ctx.fillStyle = '#ffeb3b';
+        ctx.fillText("🥚 Bấm Lấy Trứng!", coopPt.isoX - 45, coopPt.isoY + 35);
+    }
+}
+
+// Xử lý Click trên Canvas 2.5D
+canvas.addEventListener('click', (e) => {
+    let rect = canvas.getBoundingClientRect();
+    let mouseX = e.clientX - rect.left;
+    let mouseY = e.clientY - rect.top;
+
+    // Kiểm tra click vào 4 ô đất
+    plots.forEach((p, idx) => {
+        let pt = toIso(p.gridX, p.gridY);
+        let dist = Math.hypot(mouseX - pt.isoX, mouseY - pt.isoY);
+
+        if (dist < 38) {
+            if (p.state === 'EMPTY') {
+                if (seeds > 0) {
+                    seeds--;
+                    p.state = 'GROWING';
+                    p.progress = 5;
+
+                    p.timer = setInterval(() => {
+                        p.progress--;
+                        if (p.progress <= 0) {
+                            clearInterval(p.timer);
+                            p.state = 'READY';
+                        }
+                    }, 1000);
+                } else alert("Bồ hết Hạt Giống rồi! Hãy mua thêm trong Cửa hàng.");
+            } else if (p.state === 'READY') {
+                p.state = 'EMPTY';
+                inventory.wheat++;
+            }
+            updateUI();
+        }
+    });
+
+    // Kiểm tra click vào Chuồng Gà 2.5D
+    let coopPt = toIso(2.2, 0.5);
+    let coopDist = Math.hypot(mouseX - coopPt.isoX, mouseY - coopPt.isoY);
+
+    if (coopDist < 50) {
+        if (chickenCoop.state === 'HUNGRY') {
+            if (inventory.wheat > 0) {
+                inventory.wheat--;
+                chickenCoop.state = 'EATING';
+                chickenCoop.progress = 6;
+
+                chickenCoop.timer = setInterval(() => {
+                    chickenCoop.progress--;
+                    if (chickenCoop.progress <= 0) {
+                        clearInterval(chickenCoop.timer);
+                        chickenCoop.state = 'READY';
+                    }
+                }, 1000);
+            } else alert("Cần 1 Lúa Mì để cho gà ăn! Hãy trồng lúa trước nha.");
+        } else if (chickenCoop.state === 'READY') {
+            chickenCoop.state = 'HUNGRY';
+            inventory.egg++;
+            alert("Thu hoạch thành công 1 Quả Trứng Gà! 🥚");
+        }
         updateUI();
-    } else {
-        alert("Không đủ tiền mua hạt giống!");
     }
+});
+
+function buySeed() {
+    if (gold >= 10) { gold -= 10; seeds++; updateUI(); }
+    else alert("Không đủ Vàng mua Hạt Giống!");
 }
 
-function sellGoods(item) {
-    if (item === 'wheat' && inventory.wheat > 0) {
-        inventory.wheat--;
-        gold += 15;
-    } else if (item === 'egg' && inventory.egg > 0) {
-        inventory.egg--;
-        gold += 30;
-    } else {
-        alert("Không còn nông sản này trong kho để bán!");
-    }
+function sellGoods(type) {
+    if (type === 'wheat' && inventory.wheat > 0) { inventory.wheat--; gold += 15; }
+    else if (type === 'egg' && inventory.egg > 0) { inventory.egg--; gold += 30; }
+    else alert("Không có đủ nông sản này trong kho!");
     updateUI();
+}
+
+function renderLoop() {
+    drawFarm();
+    requestAnimationFrame(renderLoop);
 }
 
 updateUI();
+renderLoop();
 </script>
 </body>
 </html>
