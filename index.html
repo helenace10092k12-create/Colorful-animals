@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nông Trại Vui Vẻ - HayDay Web Edition</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+        body {
+            background-color: #2e7d32; color: #fff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex; justify-content: center; align-items: center;
+            min-height: 100vh; flex-direction: column; padding: 10px;
+        }
+        #game-container {
+            width: 800px; background: #81c784; border: 6px solid #1b5e20;
+            border-radius: 15px; padding: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            display: flex; flex-direction: column; gap: 12px;
+        }
+        /* THANH ĐẦU GAME */
+        .header {
+            background: #388e3c; padding: 10px 15px; border-radius: 10px;
+            display: flex; justify-content: space-between; align-items: center; font-weight: bold;
+        }
+        .stats { display: flex; gap: 15px; font-size: 14px; }
+        .stat-item { background: rgba(0,0,0,0.2); padding: 5px 10px; border-radius: 6px; }
+
+        /* KHU VỰC CHÍNH */
+        .main-area { display: flex; gap: 15px; }
+        
+        /* CỘT BÊN TRÁI: ĐẤT TRỒNG & CHUỒNG VẬT NUÔI */
+        .farm-grid {
+            flex: 2; background: #a5d6a7; padding: 15px; border-radius: 10px;
+            display: flex; flex-direction: column; gap: 15px;
+        }
+        .section-title { color: #1b5e20; font-size: 14px; font-weight: bold; margin-bottom: 5px; }
+        
+        .plots-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .plot-card {
+            background: #795548; height: 90px; border-radius: 8px; border: 3px solid #4e342e;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            cursor: pointer; transition: 0.2s; position: relative;
+        }
+        .plot-card:hover { transform: scale(1.03); }
+
+        .coop-container {
+            background: #d7ccc8; border: 3px solid #5d4037; border-radius: 8px; padding: 10px;
+            display: flex; justify-content: space-between; align-items: center; color: #3e2723;
+        }
+
+        /* CỘT BÊN PHẢI: TÚI ĐỒ & CHỢ BÁN HÀNG */
+        .sidebar { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+        .panel { background: #388e3c; padding: 10px; border-radius: 8px; font-size: 12px; }
+        .panel-title { font-weight: bold; margin-bottom: 8px; color: #ffeb3b; }
+
+        .shop-btn {
+            background: #fbc02d; color: #333; border: none; padding: 8px; margin-top: 5px;
+            width: 100%; border-radius: 5px; font-weight: bold; cursor: pointer; transition: 0.2s;
+        }
+        .shop-btn:hover { background: #fdd835; }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <!-- THANH THÔNG TIN VÀNG & KHO HÀNG -->
+    <div class="header">
+        <div>🌾 NÔNG TRẠI VUI VẺ</div>
+        <div class="stats">
+            <div class="stat-item">🪙 Vàng: <span id="gold-txt">100</span></div>
+            <div class="stat-item">🌱 Hạt lúa: <span id="seeds-txt">5</span></div>
+        </div>
+    </div>
+
+    <div class="main-area">
+        <!-- KHU VỰC TRỒNG TRỌT & CHĂN NUÔI -->
+        <div class="farm-grid">
+            <div>
+                <div class="section-title">🌱 CÁC Ô ĐẤT TRỒNG LÚA</div>
+                <div class="plots-container">
+                    <div class="plot-card" onclick="interactPlot(0)" id="plot-0">🟫 Đất trống</div>
+                    <div class="plot-card" onclick="interactPlot(1)" id="plot-1">🟫 Đất trống</div>
+                    <div class="plot-card" onclick="interactPlot(2)" id="plot-2">🟫 Đất trống</div>
+                </div>
+            </div>
+
+            <div>
+                <div class="section-title">🐔 CHUỒNG GÀ CHĂN NUÔI</div>
+                <div class="coop-container">
+                    <div>
+                        <div style="font-weight:bold; font-size:14px;">🐔 Gà Mái ChiChi</div>
+                        <div id="chicken-status" style="font-size:11px; margin-top:3px;">Trạng thái: Đang đói bụng 🌾</div>
+                    </div>
+                    <button class="shop-btn" style="width: auto; padding: 6px 12px;" onclick="interactChicken()">Cho Ăn / Thu Hoạch</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- BẢNG TÚI ĐỒ & CỬA HÀNG BÁN NÔNG SẢN -->
+        <div class="sidebar">
+            <div class="panel">
+                <div class="panel-title">📦 KHO NÔNG SẢN</div>
+                <div>🌾 Lúa mì: <b id="wheat-txt">0</b></div>
+                <div>🥚 Trứng gà: <b id="egg-txt">0</b></div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title">🏪 CỬA HÀNG & MUA BÁN</div>
+                <button class="shop-btn" onclick="buySeed()">Mua Hạt Lúa (10 Vàng)</button>
+                <button class="shop-btn" onclick="sellGoods('wheat')" style="background:#81c784; color:#fff;">Bán 1 Lúa (15 Vàng)</button>
+                <button class="shop-btn" onclick="sellGoods('egg')" style="background:#ffb74d; color:#fff;">Bán 1 Trứng (30 Vàng)</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// BIẾN QUẢN LÝ DỮ LIỆU GAME
+let gold = 100;
+let seeds = 5;
+let inventory = { wheat: 0, egg: 0 };
+
+// Dữ liệu 3 ô đất
+let plots = [
+    { state: 'EMPTY', timer: null, progress: 0 },
+    { state: 'EMPTY', timer: null, progress: 0 },
+    { state: 'EMPTY', timer: null, progress: 0 }
+];
+
+// Dữ liệu Chuồng gà
+let chicken = { state: 'HUNGRY', timer: null };
+
+function updateUI() {
+    document.getElementById('gold-txt').innerText = gold;
+    document.getElementById('seeds-txt').innerText = seeds;
+    document.getElementById('wheat-txt').innerText = inventory.wheat;
+    document.getElementById('egg-txt').innerText = inventory.egg;
+}
+
+// XỬ LÝ Ô ĐẤT TRỒNG CÂY
+function interactPlot(index) {
+    let p = plots[index];
+    let el = document.getElementById(`plot-${index}`);
+
+    if (p.state === 'EMPTY') {
+        if (seeds > 0) {
+            seeds--;
+            p.state = 'GROWING';
+            p.progress = 5; // Cần 5 giây để chín
+            el.innerText = `🌱 Đang lớn (${p.progress}s)`;
+            el.style.background = "#5d4037";
+
+            p.timer = setInterval(() => {
+                p.progress--;
+                if (p.progress > 0) {
+                    el.innerText = `🌱 Đang lớn (${p.progress}s)`;
+                } else {
+                    clearInterval(p.timer);
+                    p.state = 'READY';
+                    el.innerText = "🌾 Thu Hoạch Lúa!";
+                    el.style.background = "#fbc02d";
+                }
+            }, 1000);
+        } else {
+            alert("Bạn hết Hạt Giống rồi! Vào Cửa hàng mua thêm nha.");
+        }
+    } else if (p.state === 'READY') {
+        p.state = 'EMPTY';
+        inventory.wheat++;
+        el.innerText = "🟫 Đất trống";
+        el.style.background = "#795548";
+    }
+    updateUI();
+}
+
+// XỬ LÝ CHĂN NUÔI GÀ
+function interactChicken() {
+    let statusEl = document.getElementById('chicken-status');
+
+    if (chicken.state === 'HUNGRY') {
+        if (inventory.wheat > 0) {
+            inventory.wheat--;
+            chicken.state = 'EATING';
+            statusEl.innerText = "Trạng thái: Gà đang ăn lúa & đẻ trứng (7s)... ⏳";
+
+            setTimeout(() => {
+                chicken.state = 'READY';
+                statusEl.innerText = "Trạng thái: 🪺 Đã đẻ trứng! Bấm để lấy trứng!";
+            }, 7000);
+        } else {
+            alert("Bạn không có Lúa mì để cho gà ăn! Hãy trồng lúa trước nha.");
+        }
+    } else if (chicken.state === 'READY') {
+        chicken.state = 'HUNGRY';
+        inventory.egg++;
+        statusEl.innerText = "Trạng thái: Đang đói bụng 🌾";
+        alert("Đã thu hoạch được 1 Quả Trứng Gà! 🥚");
+    }
+    updateUI();
+}
+
+// CỬA HÀNG MUA BÁN
+function buySeed() {
+    if (gold >= 10) {
+        gold -= 10;
+        seeds++;
+        updateUI();
+    } else {
+        alert("Không đủ tiền mua hạt giống!");
+    }
+}
+
+function sellGoods(item) {
+    if (item === 'wheat' && inventory.wheat > 0) {
+        inventory.wheat--;
+        gold += 15;
+    } else if (item === 'egg' && inventory.egg > 0) {
+        inventory.egg--;
+        gold += 30;
+    } else {
+        alert("Không còn nông sản này trong kho để bán!");
+    }
+    updateUI();
+}
+
+updateUI();
+</script>
+</body>
+</html>
